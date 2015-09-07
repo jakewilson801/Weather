@@ -12,6 +12,12 @@
     <string name="gps_permission_denied">Sorry this application requires location to be used.</string>
     <string name="progress">"Getting location and forecast data..."</string>
     <string name="no_data">Sorry we had trouble getting your forecast try again later.</string>
+    <string name="no_network"> Please check your internet connection and try again.</string>
+
     <string name="share">Checkout the weather in</string>
     <string name="this_week">this week!</string>
+    <string name="chance_of_rain">Chance of Rain:</string>
+    <string name="high">High:</string>
+    <string name="low">Low:</string>
+    <string name="wind">Wind:</string>
 </resources>

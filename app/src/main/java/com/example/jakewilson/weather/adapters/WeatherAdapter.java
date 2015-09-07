@@ -27,7 +27,7 @@ public class WeatherAdapter extends FragmentPagerAdapter{
 
     @Override
     public Fragment getItem(int position) {
-        if(mForecast.getList().size() > 0) {
+        if(mForecast != null && mForecast.getList().size() > 0) {
             Fragment w = new WeatherFragment();
             Bundle args = new Bundle();
             args.putInt(WeatherFragment.ARG_SECTION_NUMBER, position);
@@ -35,6 +35,11 @@ public class WeatherAdapter extends FragmentPagerAdapter{
             args.putInt(WeatherFragment.DAY_FORECAST, mForecast.getList().get(position).getTemp().getDay().intValue());
             args.putLong(WeatherFragment.DATE, mForecast.getList().get(position).getDt());
             args.putString(WeatherFragment.ICON, mForecast.getList().get(position).getWeather().get(0).getIcon());
+            args.putString(WeatherFragment.DESCRIPTION, mForecast.getList().get(position).getWeather().get(0).getDescription());
+            args.putString(WeatherFragment.RAIN, String.valueOf(mForecast.getList().get(position).getClouds())+ "%");
+            args.putString(WeatherFragment.WIND, String.valueOf(mForecast.getList().get(position).getSpeed()) + " mph");
+            args.putString(WeatherFragment.LOW, String.valueOf(mForecast.getList().get(position).getTemp().getMin().intValue()));
+            args.putString(WeatherFragment.HIGH, String.valueOf(mForecast.getList().get(position).getTemp().getMax().intValue()));
             w.setArguments(args);
             return w;
         } else {

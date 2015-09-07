@@ -8,6 +8,8 @@ import android.content.res.Configuration;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.view.ViewPager;
@@ -51,50 +53,21 @@ public class WeatherActivity extends AppCompatActivity {
         mViewPager.setAdapter(mWrapperAdapter);
     }
 
-    public void requestGPS() {
-        mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
-        mLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                //Log.d("QA", String.format("&lat=%s&lon=%s", , String.valueOf(location.getLongitude())));
-                if(mAdapter.getCount() == 0)
-                    getBus().post(new LoadWeatherEvent(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())));
-            }
-
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-                Log.d("QA", "onStatusChanged");
-            }
-
-            public void onProviderEnabled(String provider) {
-                Log.d("QA", "onProviderEnabled");
-            }
-
-            public void onProviderDisabled(String provider) {
-                Log.d("QA", "onProviderDisabled");
-            }
-        };
-
-        if (checkGPSPermission()) {
-            mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
-        } else {
-            Toast.makeText(this, getResources().getString(R.string.gps_permission_denied), Toast.LENGTH_LONG).show();
-            this.finish();
-        }
-
-    }
-
-
-    public boolean checkGPSPermission() {
-        String coarse = "android.permission.ACCESS_COARSE_LOCATION";
-        String fine = "android.permission.ACCESS_FINE_LOCATION";
-        int c = this.checkCallingOrSelfPermission(coarse);
-        int f = this.checkCallingOrSelfPermission(fine);
-        return (c == PackageManager.PERMISSION_GRANTED || f == PackageManager.PERMISSION_GRANTED);
-    }
-
     @Override
     public void onResume() {
         super.onResume();
         getBus().register(this);
+        ConnectivityManager cm =
+                (ConnectivityManager) this.getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
+        boolean isConnected = activeNetwork != null &&
+                activeNetwork.isConnectedOrConnecting();
+
+        if (!isConnected) {
+            Toast.makeText(this, getResources().getString(R.string.no_network), Toast.LENGTH_LONG).show();
+            this.finish();
+            return;
+        }
         if (mAdapter.getCount() == 0) {
             mProgress = ProgressDialog.show(this, getResources().getString(R.string.title_activity_weather_pager),
                     getResources().getString(R.string.progress), true);
@@ -111,7 +84,8 @@ public class WeatherActivity extends AppCompatActivity {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mLocationManager.removeUpdates(mLocationListener);
+        if (mLocationManager != null)
+            mLocationManager.removeUpdates(mLocationListener);
     }
 
     @Override
@@ -124,12 +98,6 @@ public class WeatherActivity extends AppCompatActivity {
         } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT) {
             Log.d("QA", "portrait");
         }
-    }
-
-    @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putInt("pageItem", mViewPager.getCurrentItem());
     }
 
     @Subscribe
@@ -171,28 +139,62 @@ public class WeatherActivity extends AppCompatActivity {
         return true;
     }
 
-    // Call to update the share intent
-    private void setShareIntent(Intent shareIntent) {
-        if (mShareActionProvider != null) {
-            mShareActionProvider.setShareIntent(shareIntent);
+    public void requestGPS() {
+        mLocationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        mLocationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                if (mAdapter.getCount() == 0)
+                    getBus().post(new LoadWeatherEvent(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())));
+            }
+
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+                Log.d("QA", "onStatusChanged");
+            }
+
+            public void onProviderEnabled(String provider) {
+                Log.d("QA", "onProviderEnabled");
+            }
+
+            public void onProviderDisabled(String provider) {
+                Log.d("QA", "onProviderDisabled");
+                getBus().post(new ApiErrorEvent(new Throwable()));
+            }
+        };
+
+        if (checkGPSPermission()) {
+           Location location =  mLocationManager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
+            if(location.getAccuracy() > 25){
+                getBus().post(new LoadWeatherEvent(String.valueOf(location.getLatitude()), String.valueOf(location.getLongitude())));
+            }else {
+                mLocationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 0, 0, mLocationListener);
+            }
+        } else {
+            Toast.makeText(this, getResources().getString(R.string.gps_permission_denied), Toast.LENGTH_LONG).show();
+            this.finish();
         }
+
+    }
+
+
+    public boolean checkGPSPermission() {
+        String coarse = "android.permission.ACCESS_COARSE_LOCATION";
+        String fine = "android.permission.ACCESS_FINE_LOCATION";
+        int c = this.checkCallingOrSelfPermission(coarse);
+        int f = this.checkCallingOrSelfPermission(fine);
+        return (c == PackageManager.PERMISSION_GRANTED || f == PackageManager.PERMISSION_GRANTED);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
             return true;
         } else if (id == R.id.menu_item_share) {
             Intent sendIntent = new Intent();
             sendIntent.setAction(Intent.ACTION_SEND);
             sendIntent.putExtra(Intent.EXTRA_TEXT, String.format("%s %s %s http://openweathermap.org/city/%s", getResources().getString(R.string.share),
-                    mWeatherResponse.getCity().getName() ,getResources().getString(R.string.this_week), String.valueOf(mWeatherResponse.getCity().getId()) ));
+                    mWeatherResponse.getCity().getName(), getResources().getString(R.string.this_week), String.valueOf(mWeatherResponse.getCity().getId())));
             sendIntent.setType("text/plain");
             startActivity(Intent.createChooser(sendIntent, getResources().getString(R.string.title_activity_weather_pager)));
             return true;

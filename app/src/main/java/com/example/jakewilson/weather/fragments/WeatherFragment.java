@@ -28,6 +28,11 @@ public class WeatherFragment extends Fragment {
     public static final String CITY = "city";
     public static final String DATE = "date";
     public static final String ICON = "icon";
+    public static final String DESCRIPTION = "description";
+    public static final String RAIN = "rain";
+    public static final String HIGH = "high";
+    public static final String LOW = "low";
+    public static final String WIND = "wind";
 
     private int section;
     private int currentTemp;
@@ -35,16 +40,25 @@ public class WeatherFragment extends Fragment {
     private long date;
     private String icon;
     private DateTime dateTime;
+    private String description;
+    private String rain;
+    private String high;
+    private String low;
+    private String wind;
 
     @Bind(R.id.city_label) TextView cityView;
     @Bind(R.id.current_temp) TextView currentTempView;
     @Bind(R.id.date) TextView dateView;
     @Bind(R.id.weather_icon) ImageView weatherIcon;
+    @Bind(R.id.description) TextView descriptionView;
+    @Bind(R.id.chanceOfRain) TextView rainView;
+    @Bind(R.id.high) TextView highView;
+    @Bind(R.id.low) TextView lowView;
+    @Bind(R.id.wind) TextView windView;
 
     public Drawable getDrawable(int id){
         return getActivity().getResources().getDrawable(id);
     }
-
 
     public Drawable mapIcon(String key) {
         HashMap<String, Drawable> iconMap = new HashMap<>();
@@ -67,7 +81,7 @@ public class WeatherFragment extends Fragment {
         iconMap.put("50d", getDrawable(R.drawable.mist));
         iconMap.put("50n", getDrawable(R.drawable.mist));
         try {
-            return iconMap.get(key);
+           return iconMap.get(key);
         } catch (Exception e){
             return getDrawable(R.drawable.cleard);
         }
@@ -84,6 +98,11 @@ public class WeatherFragment extends Fragment {
         date = args.getLong(DATE);
         icon = args.getString(ICON);
         dateTime = new DateTime(date * 1000);
+        description = args.getString(DESCRIPTION);
+        rain = args.getString(RAIN);
+        wind = args.getString(WIND);
+        low = args.getString(LOW);
+        high = args.getString(HIGH);
     }
 
     @Override
@@ -94,6 +113,11 @@ public class WeatherFragment extends Fragment {
         currentTempView.setText(String.valueOf(String.valueOf(currentTemp) + '\u2109'));
         dateView.setText(String.valueOf(String.format("%s %s/%s", dateTime.dayOfWeek().getAsText(), dateTime.monthOfYear().get(), dateTime.dayOfMonth().getAsText())));
         weatherIcon.setImageDrawable(mapIcon(icon));
+        descriptionView.setText(description);
+        rainView.setText(String.format("%s %s", getResources().getString(R.string.chance_of_rain), rain));
+        highView.setText(String.format("%s %s", getResources().getString(R.string.high), high));
+        lowView.setText(String.format("%s %s", getResources().getString(R.string.low),low));
+        windView.setText(String.format("%s %s" , getResources().getString(R.string.wind),wind));
         return rootView;
     }
 
