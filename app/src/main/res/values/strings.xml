@@ -8,5 +8,10 @@
     <string name="title_section1">Section 1</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
-    <string name="title_activity_weather_pager">WeatherPagerActivity</string>
+    <string name="title_activity_weather_pager">Weather</string>
+    <string name="gps_permission_denied">Sorry this application requires location to be used.</string>
+    <string name="progress">"Getting location and forecast data..."</string>
+    <string name="no_data">Sorry we had trouble getting your forecast try again later.</string>
+    <string name="share">Checkout the weather in</string>
+    <string name="this_week">this week!</string>
 </resources>

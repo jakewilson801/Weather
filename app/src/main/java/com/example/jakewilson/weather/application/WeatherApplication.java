@@ -1,14 +1,11 @@
 package com.example.jakewilson.weather.application;
 
 import android.app.Application;
-import android.util.Log;
 
 import com.example.jakewilson.weather.clients.WeatherApi;
-import com.example.jakewilson.weather.events.ApiErrorEvent;
 import com.example.jakewilson.weather.events.BusProvider;
 import com.example.jakewilson.weather.services.WeatherService;
 import com.squareup.otto.Bus;
-import com.squareup.otto.Subscribe;
 
 import retrofit.GsonConverterFactory;
 import retrofit.Retrofit;
@@ -36,8 +33,4 @@ public class WeatherApplication extends Application {
         return retrofit.create(WeatherApi.class);
     }
 
-    @Subscribe
-    public void onApiError(ApiErrorEvent event) {
-        Log.e("ReaderApp", event.toString());
-    }
 }
